@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sd.sdzx.manager.mapper.OrderInfoMapper">
+
+    <select id="selectOrderStatistics" resultType="com.sd.sdzx.model.entity.order.OrderStatistics">
+        select DATE_FORMAT(oi.create_time ,'%Y-%m-%d') orderDate, sum(oi.total_amount)  totalAmount , count(oi.id) totalNum
+        from order_info oi where DATE_FORMAT(oi.create_time ,'%Y-%m-%d') = #{createTime}
+        GROUP BY DATE_FORMAT(oi.create_time ,'%Y-%m-%d')
+    </select>
+
+<!--    <resultMap id="orderInfoMap" type="com.sd.sdzx.model.entity.order.OrderInfo" autoMapping="true">-->
+<!--    </resultMap> -->
+    <resultMap id="orderInfoMap" type="com.sd.sdzx.model.entity.order.OrderInfo" autoMapping="true">
+    </resultMap>
+
+
+    <sql id="columns">
+        id,user_id,nick_name,order_no,coupon_id,total_amount,coupon_amount,original_total_amount,feight_fee,pay_type,order_status,receiver_name,receiver_phone,receiver_tag_name,receiver_province,receiver_city,receiver_district,receiver_address,payment_time,delivery_time,receive_time,remark,cancel_time,cancel_reason,create_time,update_time,is_deleted
+    </sql>
+    <select id="getById" resultMap="orderInfoMap">
+        select <include refid="columns" />
+        from order_info
+        where
+        id = #{id}
+    </select>
+
+    <select id="findUserPage" resultMap="orderInfoMap">
+        select <include refid="columns" />
+        from order_info
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="orderStatus != null">
+                and order_status = #{orderStatus}
+            </if>
+            and is_deleted = 0
+        </where>
+        order by id desc
+    </select>
+
+    <select id="findAll" resultMap="orderInfoMap">
+        select <include refid="columns" />
+        from order_info
+        where is_deleted = 0
+        order by id desc
+    </select>
+    <sql id="findPageWhere">
+             <where>
+            <if test="keyword != null and keyword != ''">
+                and order_no like CONCAT('%',#{keyword},'%') or receiver_name like CONCAT('%',#{keyword},'%') or receiver_phone like CONCAT('%',#{keyword},'%')
+            </if>
+                 <if test="createTimeBegin != null and createTimeBegin != ''">
+                     and create_time >= #{createTimeBegin}
+                 </if>
+                 <if test="createTimeEnd != null and createTimeEnd != ''">
+                     and create_time &lt;= #{createTimeEnd}
+                 </if>
+                 and is_deleted = 0
+            </where>
+    </sql>
+
+    <select id="findByPage"  resultType="com.sd.sdzx.model.entity.order.OrderInfo">
+        select <include refid="columns"/>
+        from order_info
+        <include refid="findPageWhere"/>
+        order by id desc
+    </select>
+
+    <resultMap id="orderAndPaymentResultMap" type="com.sd.sdzx.model.entity.order.OrderInfo" >
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="payType" column="pay_type"/>
+        <result property="receiverTagName" column="receiver_tag_name"/>
+        <result property="deliveryTime" column="delivery_time"/>
+        <result property="receiveTime" column="receive_time"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="couponId" column="coupon_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="couponAmount" column="coupon_amount"/>
+        <result property="originalTotalAmount" column="original_total_amount"/>
+        <result property="feightFee" column="feight_fee"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="receiverName" column="receiver_name"/>
+        <result property="receiverPhone" column="receiver_phone"/>
+        <result property="receiverProvince" column="receiver_province"/>
+        <result property="receiverCity" column="receiver_city"/>
+        <result property="receiverDistrict" column="receiver_district"/>
+        <result property="receiverAddress" column="receiver_address"/>
+        <result property="paymentTime" column="payment_time"/>
+        <result property="remark" column="remark"/>
+        <result property="cancelTime" column="cancel_time"/>
+        <result property="cancelReason" column="cancel_reason"/>
+<!--        <association property="orderItems" column="order_id" javaType="java.util.List" resultMap="OrderItemResultMap"/>-->
+        <collection property="orderItemList" javaType="java.util.List" resultMap="OrderItemResultMap">
+            <id property="id" column="id"/>
+            <result property="orderId" column="order_id"/>
+            <result property="skuId" column="sku_id"/>
+            <result property="skuName" column="sku_name"/>
+            <result property="thumbImg" column="thumb_img"/>
+            <result property="skuPrice" column="sku_price"/>
+            <result property="skuNum" column="sku_num"/>
+        <association property="paymentInfo" column="order_no" javaType="com.sd.sdzx.model.entity.pay.PaymentInfo" resultMap="PaymentInfoResultMap">
+            <id property="id" column="id"/>
+            <result property="orderNo" column="order_no"/>
+            <result property="payType" column="pay_type"/>
+            <result property="userId" column="user_id"/>
+            <result property="outTradeNo" column="out_trade_no"/>
+            <result property="amount" column="amount"/>
+            <result property="content" column="content"/>
+            <result property="paymentStatus" column="payment_status"/>
+            <result property="callbackTime" column="callback_time"/>
+            <result property="callbackContent" column="callback_content"/>
+        </association>
+        </collection>
+    </resultMap>
+
+    <resultMap id="OrderItemResultMap" type="com.sd.sdzx.model.entity.order.OrderItem">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="skuName" column="sku_name"/>
+        <result property="thumbImg" column="thumb_img"/>
+        <result property="skuPrice" column="sku_price"/>
+        <result property="skuNum" column="sku_num"/>
+    </resultMap>
+
+    <resultMap id="PaymentInfoResultMap" type="com.sd.sdzx.model.entity.pay.PaymentInfo">
+        <id property="id" column="id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="payType" column="pay_type"/>
+        <result property="userId" column="user_id"/>
+        <result property="outTradeNo" column="out_trade_no"/>
+        <result property="amount" column="amount"/>
+        <result property="content" column="content"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="callbackTime" column="callback_time"/>
+        <result property="callbackContent" column="callback_content"/>
+    </resultMap>
+
+
+
+
+    <select id="getOrderInfoWithDetails" parameterType="map" resultMap="orderAndPaymentResultMap">
+        SELECT
+            oi.id,
+            oi.user_id,
+            oi.nick_name,
+            oi.order_no,
+            oi.total_amount,
+            oi.coupon_amount,
+            oi.original_total_amount,
+            oi.feight_fee,
+            oi.order_status,
+            oi.receiver_name,
+            oi.receiver_phone,
+            oi.receiver_province,
+            oi.receiver_city,
+            oi.receiver_district,
+            oi.receiver_address,
+            oi.payment_time,
+            oi.remark,
+            oi.cancel_time,
+            oi.cancel_reason,
+            pi.user_id,
+            pi.order_no,
+            pi.pay_type,
+            pi.out_trade_no,
+            pi.amount,
+            pi.content,
+            pi.payment_status,
+            pi.callback_time,
+            pi.create_time,
+            pi.update_time,
+            ot.order_id,
+            ot.thumb_img,
+            ot.sku_id,
+            ot.sku_name,
+            ot.sku_price,
+            ot.sku_num
+        FROM order_info oi
+                 INNER JOIN payment_info pi ON oi.order_no = pi.order_no
+                 INNER JOIN order_item ot ON oi.id = ot.order_id
+        WHERE oi.order_no = #{orderNo} AND oi.id = #{orderId};
+    </select>
+
+    <update id="updateByOrderId">
+        update order_info set
+        <if test="userId != null and userId != ''">
+            user_id = #{userId},
+        </if>
+        <if test="nickName != null and nickName != ''">
+            nick_name = #{nickName},
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+            order_no = #{orderNo},
+        </if>
+        <if test="couponId != null and couponId != ''">
+            coupon_id = #{couponId},
+        </if>
+        <if test="totalAmount != null and totalAmount != ''">
+            total_amount = #{totalAmount},
+        </if>
+        <if test="couponAmount != null and couponAmount != ''">
+            coupon_amount = #{couponAmount},
+        </if>
+        <if test="originalTotalAmount != null and originalTotalAmount != ''">
+            original_total_amount = #{originalTotalAmount},
+        </if>
+        <if test="feightFee != null and feightFee != ''">
+            feight_fee = #{feightFee},
+        </if>
+        <if test="payType != null">
+            pay_type = #{payType},
+        </if>
+        <if test="orderStatus != null">
+            order_status = #{orderStatus},
+        </if>
+        <if test="receiverName != null and receiverName != ''">
+            receiver_name = #{receiverName},
+        </if>
+        <if test="receiverPhone != null and receiverPhone != ''">
+            receiver_phone = #{receiverPhone},
+        </if>
+        <if test="receiverTagName != null and receiverTagName != ''">
+            receiver_tag_name = #{receiverTagName},
+        </if>
+        <if test="receiverProvince != null and receiverProvince != ''">
+            receiver_province = #{receiverProvince},
+        </if>
+        <if test="receiverCity != null and receiverCity != ''">
+            receiver_city = #{receiverCity},
+        </if>
+        <if test="receiverDistrict != null and receiverDistrict != ''">
+            receiver_district = #{receiverDistrict},
+        </if>
+        <if test="receiverAddress != null and receiverAddress != ''">
+            receiver_address = #{receiverAddress},
+        </if>
+        <if test="paymentTime != null">
+            payment_time = #{paymentTime},
+        </if>
+        <if test="deliveryTime != null">
+            delivery_time = #{deliveryTime},
+        </if>
+        <if test="receiveTime != null">
+            receive_time = #{receiveTime},
+        </if>
+        <if test="remark != null and remark != ''">
+            remark = #{remark},
+        </if>
+        <if test="cancelTime != null and cancelTime != ''">
+            cancel_time = #{cancelTime},
+        </if>
+        <if test="cancelReason != null and cancelReason != ''">
+            cancel_reason = #{cancelReason},
+        </if>
+        update_time =  now()
+        where
+        id = #{id}
+    </update>
+
+    <update id="updateByPayId" >
+        update payment_info set
+        <if test="userId != null and userId != ''">
+            user_id = #{userId},
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+            order_no = #{orderNo},
+        </if>
+        <if test="payType != null">
+            pay_type = #{payType},
+        </if>
+        <if test="outTradeNo != null and outTradeNo != ''">
+            out_trade_no = #{outTradeNo},
+        </if>
+        <if test="amount != null and amount != ''">
+            amount = #{amount},
+        </if>
+        <if test="content != null and content != ''">
+            content = #{content},
+        </if>
+        <if test="paymentStatus != null">
+            payment_status = #{paymentStatus},
+        </if>
+        <if test="callbackTime != null">
+            callback_time = #{callbackTime},
+        </if>
+        <if test="callbackContent != null and callbackContent != ''">
+            callback_content = #{callbackContent},
+        </if>
+        update_time =  now()
+        where
+        id = #{id}
+    </update>
+<!--    id,order_id,sku_id,sku_name,thumb_img,sku_price,sku_num,create_time,update_time,is_deleted-->
+    <update id="updateByItemId">
+        update order_item set
+<!--        <if test="orderId != null and orderId != ''">-->
+<!--            order_id = #{orderId},-->
+<!--        </if>-->
+        <if test="skuId != null and skuId != ''">
+            sku_id = #{skuId},
+        </if>
+        <if test="skuName != null and skuName != ''">
+            sku_name = #{skuName},
+        </if>
+        <if test="thumbImg != null and thumbImg != ''">
+            thumb_img = #{thumbImg},
+        </if>
+        <if test="skuPrice != null and skuPrice != ''">
+            sku_price = #{skuPrice},
+        </if>
+        <if test="skuNum != null and skuNum != ''">
+            sku_num = #{skuNum}
+        </if>
+
+        where
+        id = #{id}
+    </update>
+    <resultMap id="paymentInfoMap" type="com.sd.sdzx.model.entity.pay.PaymentInfo" autoMapping="true">
+    </resultMap>
+    <sql id="columnss">
+        id,user_id,order_no,pay_type,out_trade_no,amount,content,payment_status,callback_time,callback_content,create_time,update_time,is_deleted
+    </sql>
+    <select id="selectByPayId" resultMap="paymentInfoMap">
+        select <include refid="columnss" />
+        from payment_info
+        where
+        order_no = #{orderNo}
+    </select>
+
+
+
+
+
+</mapper>

@@ -1,0 +1,38 @@
+server:
+  port: 8515
+
+
+spring:
+  config:
+    import: application-alipay.yml
+  application:
+    name: service-pay
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 182.92.99.190:8848
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://182.92.99.190:3306/db_spzx?serverTimezone=UTC&characterEncoding=utf8&useUnicode=true&useSSL=true
+    username: root
+    password: 1234
+  data:
+    redis:
+      host: 182.92.99.190
+      port: 6379
+#  rabbitmq:
+#    host: 192.168.75.138
+#    port: 5672
+#    username: guest
+#    password: guest
+#    publisher-confirm-type: CORRELATED  #发布确认模式，消息是否被成功发送到交换机
+#    publisher-returns: true
+#    listener:
+#      simple:
+#        prefetch: 1
+#        concurrency: 3
+#        acknowledge-mode: manual   #消费端手动确认
+mybatis:
+  config-location: classpath:mybatis-config.xml
+  mapper-locations: classpath:mapper/*/*.xml

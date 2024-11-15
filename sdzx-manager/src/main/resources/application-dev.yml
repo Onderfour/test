@@ -1,0 +1,41 @@
+# 配置服务端口号
+server:
+  port: 8501
+
+# 配置数据库连接信息
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.75.138:3306/db_spzx?characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+  # Redis的相关配置
+  data:
+    redis:
+      host: 192.168.75.138
+      port: 6379
+#  password: 1234
+
+# mybatis的配置
+mybatis:
+  config-location: classpath:/mybatis-config.xml
+  mapper-locations: classpath:/mapper/*/*.xml
+# 自定义配置
+sdzx:
+  auth:
+    noAuthUrls:
+      - /admin/system/index/login
+      - /admin/system/index/generateValidateCode
+  minio:
+#    endpointUrl: http://192.168.75.138:9000
+#    endpointUrl: http://172.17.0.4:9000
+    endpointUrl: http://localhost:9000
+    accessKey: minioadmin
+#    accessKey: adminminio
+
+#    secreKey: adminminio
+    secreKey: minioadmin
+#    accessKey: admin
+#    secreKey: admin123456
+    bucketName: sdzx-bucket
